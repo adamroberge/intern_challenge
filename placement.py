@@ -499,7 +499,16 @@ def train_placement(
                 current_lr = lr_min + \
                     (lr_max - lr_min) * 0.5 * \
                     (1 + math.cos(math.pi * stage_progress))
-                stage4_multiplier = 200000.0 * scale_factor
+                # Stage 4 multiplier scales with problem size
+                # Base 300k for small, 1.4x boost for larger problems
+                if N <= 60:
+                    stage4_multiplier = 300000.0 * scale_factor
+                elif N <= 120:
+                    stage4_multiplier = 300000.0 * scale_factor * 1.4
+                elif N <= 1500:
+                    stage4_multiplier = 300000.0 * scale_factor * 1.8
+                else:
+                    stage4_multiplier = 300000.0 * scale_factor * 2.2
                 current_lambda_overlap = lambda_overlap * stage4_multiplier
                 current_lambda_wirelength = lambda_wirelength * \
                     (10.0 + 20.0 * stage_progress)
@@ -914,8 +923,10 @@ def main():
     normalized_metrics = calculate_normalized_metrics(
         final_cell_features, pin_features, edge_list
     )
-    print(f"Overlap Ratio: {normalized_metrics['overlap_ratio']:.4f} "
-          f"({normalized_metrics['num_cells_with_overlaps']}/{normalized_metrics['total_cells']} cells)")
+    print(
+        f"Overlap Ratio: {normalized_metrics['overlap_ratio']:.4f} "
+        f"({normalized_metrics['num_cells_with_overlaps']}/{normalized_metrics['total_cells']} cells)"
+    )
     print(f"Normalized Wirelength: {normalized_metrics['normalized_wl']:.4f}")
 
     print("\n" + "=" * 70)
